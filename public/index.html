@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flash Card Generator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Flash Card Generator</h1>
+    <form id="inputForm">
+        <label for="inputData">Enter a topic:</label>
+        <input type="text" id="inputData" name="inputData" placeholder="Enter topic here..." required>
+        <button type="submit">Generate Flashcards</button>
+    </form>
+    <div id="flashcardsContainer"></div>
+
+    <script>
+        const form = document.getElementById('inputForm');
+        const flashcardsContainer = document.getElementById('flashcardsContainer');
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault(); // Prevent form submission reload
+            const inputData = document.getElementById('inputData').value;
+
+            flashcardsContainer.innerHTML = '<p>Loading...</p>'; // Show loading message
+
+            try {
+                const response = await fetch('/process', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `inputData=${encodeURIComponent(inputData)}`
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch flashcards');
+                }
+
+                const flashcards = await response.json(); // Parse JSON response
+                displayFlashcards(flashcards);
+            } catch (error) {
+                console.error('Error:', error);
+                flashcardsContainer.innerHTML = '<p>Error generating flashcards. Please try again.</p>';
+            }
+        });
+
+        function displayFlashcards(flashcards) {
+            flashcardsContainer.innerHTML = ''; // Clear existing flashcards
+
+            flashcards.forEach(({ term, definition }) => {
+                const flashcard = document.createElement('div');
+                flashcard.className = 'flashcard';
+
+                flashcard.innerHTML = `
+                    <div class="flashcard-inner">
+                        <div class="flashcard-front">${term}</div>
+                        <div class="flashcard-back">${definition}</div>
+                    </div>
+                `;
+
+                flashcard.addEventListener('click', () => {
+                    flashcard.classList.toggle('flip'); // Flip card on click
+                });
+
+                flashcardsContainer.appendChild(flashcard);
+            });
+        }
+    </script>
+</body>
+</html>
